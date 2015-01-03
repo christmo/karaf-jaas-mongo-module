@@ -4,7 +4,7 @@
 	<parent>
 		<artifactId>jaas-mongo</artifactId>
 		<groupId>org.apache.karaf.jaas</groupId>
-		<version>1.0.0</version>
+		<version>1.0.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>mongo-auth-test</artifactId>
 	<packaging>bundle</packaging>

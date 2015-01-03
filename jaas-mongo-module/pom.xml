@@ -4,7 +4,7 @@
 	<parent>
 		<groupId>org.apache.karaf.jaas</groupId>
 		<artifactId>jaas-mongo</artifactId>
-		<version>1.0.0</version>
+		<version>1.0.1-SNAPSHOT</version>
 	</parent>
 	<artifactId>jaas-mongo-module</artifactId>
 	<packaging>bundle</packaging>
