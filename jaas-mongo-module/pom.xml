@@ -1,0 +1,128 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<parent>
+		<groupId>org.apache.karaf.jaas</groupId>
+		<artifactId>jaas-mongo</artifactId>
+		<version>1.0.0-SNAPSHOT</version>
+	</parent>
+	<artifactId>jaas-mongo-module</artifactId>
+	<packaging>bundle</packaging>
+	<name>Apache Karaf :: JAAS :: Mongo Module</name>
+	<description>This bundle provides a Mongo based JAAS module which can be used in Karaf.</description>
+
+	<properties>
+		<osgi.export>
+			${project.groupId}.modules.mongo;version="${project.version}"
+		</osgi.export>
+		<osgi.private>
+			${project.groupId}.modules.mongo.internal;version="${project.version}"
+		</osgi.private>
+		<osgi.import>
+			javax.net,
+			org.osgi.framework,
+			org.apache.karaf.jaas.config,
+			org.apache.karaf.jaas.modules,
+			org.osgi.service.event;resolution:=optional,
+			!net.sf.ehcache*,
+			!net.spy.memcached*,
+			*
+		</osgi.import>
+	</properties>
+
+	<dependencies>
+
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-api</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.mongodb</groupId>
+			<artifactId>mongo-java-driver</artifactId>
+		</dependency>
+
+		<dependency>
+			<groupId>org.osgi</groupId>
+			<artifactId>org.osgi.core</artifactId>
+			<scope>compile</scope>
+		</dependency>
+
+		<!-- used for the extensibility of details retrieval and processing -->
+		<dependency>
+			<groupId>org.apache.karaf.jaas</groupId>
+			<artifactId>org.apache.karaf.jaas.modules</artifactId>
+		</dependency>
+
+		<!-- testing -->
+		<dependency>
+			<groupId>junit</groupId>
+			<artifactId>junit</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.mockito</groupId>
+			<artifactId>mockito-core</artifactId>
+		</dependency>
+
+		<!-- logging bindings for testing -->
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jcl-over-slf4j</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>jul-to-slf4j</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>org.slf4j</groupId>
+			<artifactId>slf4j-log4j12</artifactId>
+		</dependency>
+		<dependency>
+			<groupId>de.flapdoodle.embed</groupId>
+			<artifactId>de.flapdoodle.embed.mongo</artifactId>
+			<scope>test</scope>
+		</dependency>
+
+	</dependencies>
+
+	<build>
+		<plugins>
+			<!-- FIXME disable the manifest jar as the classpath scanner cannot deal 
+				with it in the unit tests -->
+			<plugin>
+				<groupId>org.apache.maven.plugins</groupId>
+				<artifactId>maven-surefire-plugin</artifactId>
+				<configuration>
+					<useManifestOnlyJar>false</useManifestOnlyJar>
+				</configuration>
+			</plugin>
+			<!-- package bundle -->
+			<plugin>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>maven-bundle-plugin</artifactId>
+				<configuration>
+					<instructions>
+						<Bundle-Category>Security</Bundle-Category>
+						<Bundle-SymbolicName>${project.groupId}.${project.artifactId}</Bundle-SymbolicName>
+						<Bundle-Description>${project.description}</Bundle-Description>
+						<Import-Package>${osgi.import}</Import-Package>
+						<Private-Package>${osgi.private}</Private-Package>
+						<Export-Package>${osgi.export}</Export-Package>
+					</instructions>
+				</configuration>
+				<executions>
+					<execution>
+						<!-- need to generate here to ensure the manifest is available for 
+							the unit tests -->
+						<id>generate-manifest</id>
+						<goals>
+							<goal>manifest</goal>
+						</goals>
+					</execution>
+				</executions>
+			</plugin>
+		</plugins>
+	</build>
+
+</project>

@@ -1,0 +1,43 @@
+<blueprint xmlns="http://www.osgi.org/xmlns/blueprint/v1.0.0"
+	xmlns:cm="http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0"
+	xmlns:ext="http://aries.apache.org/blueprint/xmlns/blueprint-ext/v1.0.0"
+	xmlns:cxf="http://cxf.apache.org/blueprint/core" xmlns:jaxws="http://cxf.apache.org/blueprint/jaxws"
+	xmlns:jaxrs="http://cxf.apache.org/blueprint/jaxrs" xmlns:sec="http://www.springframework.org/schema/security"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="
+	http://www.osgi.org/xmlns/blueprint/v1.0.0 http://www.osgi.org/xmlns/blueprint/v1.0.0/blueprint.xsd
+	http://aries.apache.org/blueprint/xmlns/blueprint-cm/v1.1.0 http://aries.apache.org/schemas/blueprint-cm/blueprint-cm-1.1.0.xsd	
+	http://aries.apache.org/blueprint/xmlns/blueprint-ext/v1.0.0 http://aries.apache.org/schemas/blueprint-ext/blueprint-ext.xsd
+	http://cxf.apache.org/blueprint/core http://cxf.apache.org/schemas/blueprint/core.xsd
+	http://cxf.apache.org/blueprint/jaxrs http://cxf.apache.org/schemas/blueprint/jaxrs.xsd
+	http://www.springframework.org/schema/security http://www.springframework.org/schema/security/spring-security.xsd">
+
+
+	<bean id="authenticationFilter" class="org.apache.cxf.jaxrs.security.JAASAuthenticationFilter">
+		<!-- Name of the JAAS Context -->
+		<property name="contextName" value="mongo" />
+		<property name="realmName" value="TEST Co" />
+
+		<!-- Hint to the filter on how to have Principals representing users and 
+			roles separated while initializing a SecurityContext -->
+		<property name="roleClassifier" value="GroupPrincipal" />
+		<property name="roleClassifierType" value="classname" />
+	</bean>
+
+	<cxf:bus>
+		<cxf:features>
+			<cxf:logging />
+		</cxf:features>
+	</cxf:bus>
+
+	<jaxrs:server id="echoResource" address="/rest/echo">
+		<jaxrs:serviceBeans>
+			<bean class="org.apache.karaf.jaas.modules.mongo.test.EchoServiceImpl" />
+		</jaxrs:serviceBeans>
+		<jaxrs:providers>
+			<ref component-id="authenticationFilter" />
+		</jaxrs:providers>
+	</jaxrs:server>
+
+
+</blueprint>

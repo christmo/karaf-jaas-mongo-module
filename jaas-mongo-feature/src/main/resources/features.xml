@@ -1,0 +1,60 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<features name="jaas-mongo-module-${project.version}">
+
+	<repository>
+		mvn:org.apache.cxf.karaf/apache-cxf/2.7.14/xml/features
+	</repository>
+
+	<!-- workaround https://issues.apache.org/jira/browse/KARAF-2660 -->
+	<feature name="javax-annotation">
+		<bundle start-level="4">
+			mvn:javax.annotation/javax.annotation-api/1.2
+		</bundle>
+	</feature>
+
+	<feature name="jaxrs-api">
+		<bundle start-level="10">
+			mvn:org.apache.servicemix.specs/org.apache.servicemix.specs.jsr339-api-2.0/2.4.0
+		</bundle>
+	</feature>
+	<!-- workaround for SM-2301 -->
+	<feature name="joda-time">
+		<bundle start-level="10">
+			mvn:org.apache.servicemix.bundles/org.apache.servicemix.bundles.joda-time/2.3_1
+		</bundle>
+	</feature>
+
+
+	<feature name="mongo-driver" version="${project.version}"
+		resolver="(obr)" description="Provides MonogDB Library">
+		<details>Installs the mongo client driver</details>
+		<bundle start-level="31">mvn:org.mongodb/mongo-java-driver/${mongo.driver.version}
+		</bundle>
+	</feature>
+
+	<feature name="mongo-jaas-module" version="${project.version}"
+		resolver="(obr)" description="Provide MongoDB JAAS LoginModule">
+
+		<bundle dependency="true">
+			mvn:org.mongodb/mongo-java-driver/${mongo.driver.version}
+		</bundle>
+		<bundle start-level="32">
+			mvn:org.apache.karaf.jaas/jaas-mongo-module/${project.version}
+		</bundle>
+
+	</feature>
+
+
+	<feature name="mongo-auth-test" version="${project.version}"
+		resolver="(obr)" description="MongoDB JAAS LoginModule Example">
+
+		<bundle dependency="true">
+			mvn:org.apache.karaf.jaas/jaas-mongo-module/${project.version}
+		</bundle>
+
+		<bundle>
+			mvn:org.apache.karaf.jaas/mongo-auth-test/${project.version}
+		</bundle>
+	</feature>
+
+</features>

@@ -1,0 +1,505 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<project xmlns="http://maven.apache.org/POM/4.0.0" xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
+	<modelVersion>4.0.0</modelVersion>
+	<groupId>org.apache.karaf.jaas</groupId>
+	<artifactId>jaas-mongo</artifactId>
+	<version>1.0.0-SNAPSHOT</version>
+	<packaging>pom</packaging>
+	<name>Apache Karaf JAAS Module Parent</name>
+	<description>An Apache Karaf JAAS Module that uses Mongo as its user store.</description>
+
+	<properties>
+		<!-- unify the encoding for all the modules -->
+		<project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
+		<project.reporting.outputEncoding>UTF-8</project.reporting.outputEncoding>
+
+		<!-- core frameworks -->
+		<osgi.version>4.3.1</osgi.version>
+		<osgi.range>[4.3,6)</osgi.range>
+		<bnd.version>2.2.0</bnd.version>
+		<bnd.range>[2.2,3)</bnd.range>
+		<karaf.version>2.3.9</karaf.version>
+		<karaf.range>[2.3,5)</karaf.range>
+		<felix.framework.version>4.0.3</felix.framework.version>
+		<felix.configadmin.version>1.4.0</felix.configadmin.version>
+		<felix.fileinstall.version>3.2.6</felix.fileinstall.version>
+
+		<mongo.driver.version>2.12.0</mongo.driver.version>
+		<mongo.driver.range>[2.12,3)</mongo.driver.range>
+
+		<joda.version>2.1</joda.version>
+		<joda.range>[2.1,2.3)</joda.range>
+		<commons-lang.version>2.6</commons-lang.version>
+		<slf4j.version>1.7.2</slf4j.version>
+		<slf4j.range>[1.7,2)</slf4j.range>
+
+		<flapdoodle.process.version>1.39.0</flapdoodle.process.version>
+		<flapdoodle.process.range>[1.39,1.40)</flapdoodle.process.range>
+		<flapdoodle.mongo.version>1.46.0</flapdoodle.mongo.version>
+		<flapdoodle.mongo.range>[1.46,1.50)</flapdoodle.mongo.range>
+		<jna.version>4.0.0</jna.version>
+		<exam.version>3.4.0</exam.version>
+		<exam.url.version>1.6.0</exam.url.version>
+		<aries.api.version>1.0.0</aries.api.version>
+		<aries.core.version>1.1.0</aries.core.version>
+		<aries.proxy.version>1.0.0</aries.proxy.version>
+		<aries.proxy.impl.version>1.0.1</aries.proxy.impl.version>
+		<aries.util.version>1.1.0</aries.util.version>
+		<pax.tinybundle.version>1.3.1</pax.tinybundle.version>
+		<pojosr.version>0.2.1</pojosr.version>
+
+		<junit.version>4.11</junit.version>
+		<mockito.version>1.10.19</mockito.version>
+	</properties>
+
+	<modules>
+		<module>jaas-mongo-feature</module>
+		<module>jaas-mongo-module</module>
+		<module>mongo-auth-test</module>
+	</modules>
+
+	<scm>
+		<connection>scm:git:https://github.com/bertramn/karaf-jaas-mongo-module.git</connection>
+		<developerConnection>scm:git:https://github.com/bertramn/karaf-jaas-mongo-module.git</developerConnection>
+		<url>https://github.com/bertramn/karaf-jaas-mongo-module/</url>
+		<tag>HEAD</tag>
+	</scm>
+
+	<distributionManagement>
+		<repository>
+			<id>fareliner.repo</id>
+			<url>http://mvn.fareliner.com/content/repositories/releases/</url>
+		</repository>
+		<snapshotRepository>
+			<id>fareliner.repo</id>
+			<url>http://mvn.fareliner.com/content/repositories/snapshots/</url>
+		</snapshotRepository>
+	</distributionManagement>
+
+	<!-- Managed dependencies -->
+	<dependencyManagement>
+		<dependencies>
+
+			<!-- runtime dependencies -->
+			<dependency>
+				<groupId>org.mongodb</groupId>
+				<artifactId>mongo-java-driver</artifactId>
+				<version>${mongo.driver.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.karaf.jaas</groupId>
+				<artifactId>org.apache.karaf.jaas.boot</artifactId>
+				<version>${karaf.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.karaf.jaas</groupId>
+				<artifactId>org.apache.karaf.jaas.config</artifactId>
+				<version>${karaf.version}</version>
+			</dependency>
+
+			<!-- logging stuff -->
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-api</artifactId>
+				<version>${slf4j.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>jcl-over-slf4j</artifactId>
+				<version>${slf4j.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>osgi-over-slf4j</artifactId>
+				<version>${slf4j.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>jul-to-slf4j</artifactId>
+				<version>${slf4j.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.slf4j</groupId>
+				<artifactId>slf4j-log4j12</artifactId>
+				<version>${slf4j.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>log4j</groupId>
+				<artifactId>log4j</artifactId>
+				<version>1.2.15</version>
+				<exclusions>
+					<exclusion>
+						<groupId>javax.mail</groupId>
+						<artifactId>mail</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>javax.activation</groupId>
+						<artifactId>activation</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>javax.jms</groupId>
+						<artifactId>jms</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>com.sun.jmx</groupId>
+						<artifactId>jmxri</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>com.sun.jdmk</groupId>
+						<artifactId>jmxtools</artifactId>
+					</exclusion>
+				</exclusions>
+			</dependency>
+
+			<!--testing stuff -->
+			<dependency>
+				<groupId>junit</groupId>
+				<artifactId>junit</artifactId>
+				<version>${junit.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.mockito</groupId>
+				<artifactId>mockito-core</artifactId>
+				<version>${mockito.version}</version>
+			</dependency>
+
+			<!-- embedded mongodb process testing utility -->
+			<dependency>
+				<groupId>de.flapdoodle.embed</groupId>
+				<artifactId>de.flapdoodle.embed.mongo</artifactId>
+				<version>${flapdoodle.mongo.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>de.flapdoodle.embed</groupId>
+				<artifactId>de.flapdoodle.embed.process</artifactId>
+				<version>${flapdoodle.process.version}</version>
+			</dependency>
+
+			<dependency>
+				<groupId>net.java.dev.jna</groupId>
+				<artifactId>jna</artifactId>
+				<version>${jna.version}</version>
+			</dependency>
+			<dependency>
+				<groupId>net.java.dev.jna</groupId>
+				<artifactId>jna-platform</artifactId>
+				<version>${jna.version}</version>
+			</dependency>
+
+
+			<!-- FIXME remove this -->
+			<dependency>
+				<groupId>org.apache.karaf.jaas</groupId>
+				<artifactId>org.apache.karaf.jaas.modules</artifactId>
+				<version>${karaf.version}</version>
+			</dependency>
+
+
+			<!-- OSGi API -->
+			<dependency>
+				<groupId>org.osgi</groupId>
+				<artifactId>org.osgi.core</artifactId>
+				<version>${osgi.version}</version>
+				<scope>compile</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.osgi</groupId>
+				<artifactId>org.osgi.compendium</artifactId>
+				<version>${osgi.version}</version>
+				<scope>compile</scope>
+			</dependency>
+
+			<!-- OSGi tool -->
+			<dependency>
+				<groupId>biz.aQute.bnd</groupId>
+				<artifactId>bndlib</artifactId>
+				<version>${bnd.version}</version>
+			</dependency>
+
+			<!-- common stuff -->
+			<dependency>
+				<groupId>commons-lang</groupId>
+				<artifactId>commons-lang</artifactId>
+				<version>${commons-lang.version}</version>
+			</dependency>
+
+			<!-- OSGi paxexam testing stuff -->
+			<dependency>
+				<groupId>org.ops4j.pax.exam</groupId>
+				<artifactId>pax-exam-container-native</artifactId>
+				<version>${exam.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.ops4j.pax.exam</groupId>
+				<artifactId>pax-exam-junit4</artifactId>
+				<version>${exam.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.ops4j.pax.exam</groupId>
+				<artifactId>pax-exam-link-mvn</artifactId>
+				<version>${exam.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.ops4j.pax.exam</groupId>
+				<artifactId>pax-exam-link-assembly</artifactId>
+				<version>${exam.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.ops4j.pax.url</groupId>
+				<artifactId>pax-url-wrap</artifactId>
+				<version>${exam.url.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.ops4j.pax.url</groupId>
+				<artifactId>pax-url-aether</artifactId>
+				<version>${exam.url.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.ops4j.pax.exam</groupId>
+				<artifactId>pax-exam-container-karaf</artifactId>
+				<version>${exam.version}</version>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.apache.karaf</groupId>
+				<artifactId>apache-karaf</artifactId>
+				<version>${karaf.version}</version>
+				<type>tar.gz</type>
+				<scope>test</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>org.apache.felix</groupId>
+				<artifactId>org.apache.felix.framework</artifactId>
+				<version>${felix.framework.version}</version>
+				<scope>test</scope>
+			</dependency>
+
+			<dependency>
+				<groupId>com.googlecode.pojosr</groupId>
+				<artifactId>de.kalpatec.pojosr.framework</artifactId>
+				<version>${pojosr.version}</version>
+				<exclusions>
+					<exclusion>
+						<groupId>org.osgi</groupId>
+						<artifactId>org.osgi.core</artifactId>
+					</exclusion>
+					<exclusion>
+						<groupId>org.osgi</groupId>
+						<artifactId>org.osgi.compendium</artifactId>
+					</exclusion>
+				</exclusions>
+				<scope>test</scope>
+			</dependency>
+			<dependency>
+				<groupId>org.ops4j.pax.swissbox</groupId>
+				<artifactId>pax-swissbox-tinybundles</artifactId>
+				<version>${pax.tinybundle.version}</version>
+				<scope>test</scope>
+			</dependency>
+		</dependencies>
+	</dependencyManagement>
+
+	<build>
+		<pluginManagement>
+			<plugins>
+
+				<!-- compiler plugin with JAXB and JAXWS endorsed APIs -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-compiler-plugin</artifactId>
+					<version>3.1</version>
+					<configuration>
+						<source>${maven.compile.source}</source>
+						<target>${maven.compile.target}</target>
+						<!-- compiler debug -->
+						<debug>true</debug>
+						<debuglevel>lines,vars,source</debuglevel>
+						<optimize>true</optimize>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-surefire-plugin</artifactId>
+					<version>2.17</version>
+					<configuration>
+						<forkCount>1</forkCount>
+						<reuseForks>true</reuseForks>
+						<!-- FIXME disable the manifest jar as the classpath scanner cannot 
+							deal with it in the unit tests -->
+						<useManifestOnlyJar>false</useManifestOnlyJar>
+					</configuration>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.servicemix.tooling</groupId>
+					<artifactId>depends-maven-plugin</artifactId>
+					<version>1.2</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.felix</groupId>
+					<artifactId>maven-bundle-plugin</artifactId>
+					<version>2.5.0</version>
+					<extensions>true</extensions>
+				</plugin>
+				<!-- resources plugin -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-resources-plugin</artifactId>
+					<version>2.6</version>
+					<configuration>
+						<encoding>UTF-8</encoding>
+					</configuration>
+				</plugin>
+				<plugin>
+					<!-- need to package a few class files to be registered with the pax 
+						exam container for unit testing -->
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-assembly-plugin</artifactId>
+					<version>2.4</version>
+				</plugin>
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-jar-plugin</artifactId>
+					<version>2.5</version>
+				</plugin>
+				<!-- release plugin -->
+				<plugin>
+					<groupId>org.apache.maven.plugins</groupId>
+					<artifactId>maven-release-plugin</artifactId>
+					<!-- 2.5 is still broken, see http://jira.codehaus.org/browse/MRELEASE-812 -->
+					<version>2.4.2</version>
+					<configuration>
+						<!-- dont push changes remotely ... override if needed -->
+						<pushChanges>false</pushChanges>
+					</configuration>
+				</plugin>
+
+				<plugin>
+					<groupId>org.codehaus.mojo</groupId>
+					<artifactId>build-helper-maven-plugin</artifactId>
+					<version>1.9.1</version>
+				</plugin>
+
+				<!--This plugin's configuration is used to store Eclipse m2e settings 
+					only. It has no influence on the Maven build itself. -->
+				<plugin>
+					<groupId>org.eclipse.m2e</groupId>
+					<artifactId>lifecycle-mapping</artifactId>
+					<version>1.0.0</version>
+					<configuration>
+						<lifecycleMappingMetadata>
+							<pluginExecutions>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.apache.servicemix.tooling</groupId>
+										<artifactId>depends-maven-plugin</artifactId>
+										<versionRange>[1.2,)</versionRange>
+										<goals>
+											<goal>generate-depends-file</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<execute />
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.apache.maven.plugins</groupId>
+										<artifactId>maven-dependency-plugin</artifactId>
+										<versionRange>[1.0,)</versionRange>
+										<goals>
+											<goal>copy</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<execute />
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.apache.maven.plugins</groupId>
+										<artifactId>maven-assembly-plugin</artifactId>
+										<versionRange>[2.0,)</versionRange>
+										<goals>
+											<goal>single</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<ignore />
+									</action>
+								</pluginExecution>
+								<pluginExecution>
+									<pluginExecutionFilter>
+										<groupId>org.apache.felix</groupId>
+										<artifactId>maven-bundle-plugin</artifactId>
+										<versionRange>[1.0,)</versionRange>
+										<goals>
+											<goal>manifest</goal>
+										</goals>
+									</pluginExecutionFilter>
+									<action>
+										<execute />
+									</action>
+								</pluginExecution>
+							</pluginExecutions>
+						</lifecycleMappingMetadata>
+					</configuration>
+				</plugin>
+			</plugins>
+		</pluginManagement>
+	</build>
+
+	<profiles>
+		<profile>
+			<id>jdk-1.5</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+				<jdk>1.5</jdk>
+			</activation>
+			<properties>
+				<!-- Default configuration for compiler source and target JVM -->
+				<maven.compile.source>1.5</maven.compile.source>
+				<maven.compile.target>1.5</maven.compile.target>
+			</properties>
+		</profile>
+		<profile>
+			<id>jdk-1.6</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+				<jdk>1.6</jdk>
+			</activation>
+			<properties>
+				<!-- Default configuration for compiler source and target JVM -->
+				<maven.compile.source>1.6</maven.compile.source>
+				<maven.compile.target>1.6</maven.compile.target>
+			</properties>
+		</profile>
+		<profile>
+			<id>jdk-7</id>
+			<activation>
+				<activeByDefault>false</activeByDefault>
+				<jdk>1.7</jdk>
+			</activation>
+			<properties>
+				<!-- Default configuration for compiler source and target JVM -->
+				<maven.compile.source>1.7</maven.compile.source>
+				<maven.compile.target>1.7</maven.compile.target>
+			</properties>
+		</profile>
+	</profiles>
+
+</project>
