@@ -34,7 +34,7 @@
 		<slf4j.range>[1.7,2)</slf4j.range>
 
 		<flapdoodle.process.version>1.40.1</flapdoodle.process.version>
-		<flapdoodle.process.range>[1.39,1.40)</flapdoodle.process.range>
+		<flapdoodle.process.range>[1.40,1.50)</flapdoodle.process.range>
 		<flapdoodle.mongo.version>1.46.4</flapdoodle.mongo.version>
 		<flapdoodle.mongo.range>[1.46,1.50)</flapdoodle.mongo.range>
 		<jna.version>4.0.0</jna.version>
