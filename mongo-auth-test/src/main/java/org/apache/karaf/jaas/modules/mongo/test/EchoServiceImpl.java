@@ -19,8 +19,15 @@
  */
 package org.apache.karaf.jaas.modules.mongo.test;
 
-import java.security.Principal;
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
 
+import java.security.AccessControlContext;
+import java.security.AccessController;
+import java.security.Principal;
+import java.util.Set;
+
+import javax.security.auth.Subject;
 import javax.ws.rs.Consumes;
 import javax.ws.rs.GET;
 import javax.ws.rs.Path;
@@ -31,13 +38,12 @@ import javax.ws.rs.core.MediaType;
 import javax.ws.rs.core.Response;
 import javax.ws.rs.core.SecurityContext;
 
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import org.apache.karaf.jaas.modules.mongo.ExtendedUserPrincipal;
 
-@Consumes({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON,
-		MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
-@Produces({ MediaType.APPLICATION_XML, MediaType.APPLICATION_JSON,
-		MediaType.TEXT_XML, MediaType.TEXT_PLAIN })
+@Consumes({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML,
+		MediaType.TEXT_XML })
+@Produces({ MediaType.APPLICATION_JSON, MediaType.APPLICATION_XML,
+		MediaType.TEXT_XML })
 @Path("/")
 public class EchoServiceImpl {
 
@@ -48,17 +54,44 @@ public class EchoServiceImpl {
 	public Response echo(@Context SecurityContext context,
 			@PathParam("message") String message) {
 
-		Principal user = context.getUserPrincipal();
+		Token token = new Token(message);
 
-		log.info("User Principal [{}] is of type [{}]", user.getName(), user
-				.getClass().getName());
+		// get access to subject in OSGi
+		AccessControlContext acc = AccessController.getContext();
+		if (acc == null) {
+			token.appendError("access control context is null");
+		}
+
+		Subject subject = Subject.getSubject(acc);
+		if (subject == null) {
+			token.appendError("subject is null");
+		} else {
+			Set<Principal> principals = subject.getPrincipals();
+		}
+
+		Principal user = context.getUserPrincipal();
+		if (user == null) {
+			token.appendError("principal on security context is null");
+		} else if (!(user instanceof ExtendedUserPrincipal)) {
+			token.setError("principal on security context is not an extended type but ["
+					+ user.getClass().getName() + "]");
+		} else {
+
+			ExtendedUserPrincipal extUser = (ExtendedUserPrincipal) user;
+			token.setPrincipal(extUser.getName());
+
+			for (String key : extUser.getProperties().keySet()) {
+				token.addProperty(key, extUser.getProperties().get(key));
+			}
+
+		}
+
 		log.info("User [{}] {} member of users.", user.getName(),
 				(context.isUserInRole("users") ? "is" : "is not"));
 		log.info("User [{}] {} member of admins.", user.getName(),
 				(context.isUserInRole("admins") ? "is" : "is not"));
 
-		return Response.ok(new Token(message)).build();
+		return Response.ok(token).build();
 
 	}
-
 }

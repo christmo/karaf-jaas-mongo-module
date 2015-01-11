@@ -47,6 +47,10 @@ import org.apache.karaf.jaas.modules.mongo.internal.DefaultUserDetailService;
  * 
  * A mongo database login module that can be used in the Karaf container.
  * 
+ * TODO check out <a href=
+ * "http://stackoverflow.com/questions/27184877/how-to-add-a-custom-loginmodule-to-karaf-jaas-security-framework"
+ * >this</a>
+ * 
  * @author Niels Bertram
  *
  */

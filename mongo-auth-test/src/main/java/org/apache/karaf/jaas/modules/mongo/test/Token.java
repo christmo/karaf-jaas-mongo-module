@@ -19,11 +19,17 @@
  */
 package org.apache.karaf.jaas.modules.mongo.test;
 
+import java.util.ArrayList;
 import java.util.Date;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 import javax.xml.bind.annotation.XmlAccessType;
 import javax.xml.bind.annotation.XmlAccessorType;
 import javax.xml.bind.annotation.XmlAttribute;
+import javax.xml.bind.annotation.XmlElement;
+import javax.xml.bind.annotation.XmlElementWrapper;
 import javax.xml.bind.annotation.XmlRootElement;
 import javax.xml.bind.annotation.XmlType;
 
@@ -32,24 +38,32 @@ import javax.xml.bind.annotation.XmlType;
 @XmlRootElement(name = "Token")
 public class Token {
 
-	private String message;
+	private String echo;
+
+	private String error;
 
 	private String timestamp;
+
+	private String principal;
+
+	private List<String> groups = new ArrayList<String>();
+
+	private Map<String, String> properties = new HashMap<String, String>();
 
 	public Token() {
 	}
 
 	public Token(String message) {
-		this.message = message;
+		this.echo = message;
 	}
 
-	@XmlAttribute(name = "message")
-	public String getMessage() {
-		return message;
+	@XmlAttribute(name = "echo")
+	public String getEcho() {
+		return echo;
 	}
 
-	public void setMessage(String message) {
-		this.message = message;
+	public void setEcho(String message) {
+		this.echo = message;
 	}
 
 	@XmlAttribute(name = "timestamp")
@@ -60,6 +74,62 @@ public class Token {
 
 	public void setTimestamp(String timestamp) {
 		this.timestamp = timestamp;
+	}
+
+	@XmlElement(name = "Error", nillable = true)
+	public String getError() {
+		return error;
+	}
+
+	public void setError(String error) {
+		this.error = error;
+	}
+
+	public Token appendError(String error) {
+		if (this.error == null) {
+			this.error = error;
+		} else {
+			this.error += "\n" + error;
+		}
+
+		return this;
+	}
+
+	@XmlElement(name = "Principal")
+	public String getPrincipal() {
+		return principal;
+	}
+
+	public void setPrincipal(String principal) {
+		this.principal = principal;
+	}
+
+	@XmlElementWrapper(name = "Groups", nillable = true)
+	@XmlElement(name = "Group")
+	public List<String> getGroups() {
+		return groups;
+	}
+
+	public void setGroups(List<String> groups) {
+		this.groups.addAll(groups);
+	}
+
+	public Token addGroup(String group) {
+		this.groups.add(group);
+		return this;
+	}
+
+	public Map<String, String> getProperties() {
+		return properties;
+	}
+
+	public void setProperties(Map<String, String> properties) {
+		this.properties.putAll(properties);
+	}
+
+	public Token addProperty(String key, String value) {
+		this.properties.put(key, value);
+		return this;
 	}
 
 }
