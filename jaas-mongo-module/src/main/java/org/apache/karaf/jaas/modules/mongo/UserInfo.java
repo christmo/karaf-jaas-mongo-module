@@ -42,6 +42,9 @@ public class UserInfo {
 
 	public Map<String, String> properties = new HashMap<String, String>();
 
+	public UserInfo() {
+	}
+
 	public UserInfo(String name, String password) {
 		this.name = name;
 		this.password = password;
@@ -55,6 +58,11 @@ public class UserInfo {
 		this.name = name;
 	}
 
+	public UserInfo withName(String name) {
+		setName(name);
+		return this;
+	}
+
 	public String getPassword() {
 		return this.password;
 	}
@@ -63,8 +71,19 @@ public class UserInfo {
 		this.password = password;
 	}
 
+	public UserInfo withPassword(String password) {
+		setPassword(password);
+		return this;
+	}
+
 	public List<String> getGroups() {
 		return this.groups;
+	}
+
+	public void setGroups(List<String> groups) {
+		if (groups != null) {
+			this.groups.addAll(groups);
+		}
 	}
 
 	public void addGroup(String group) {

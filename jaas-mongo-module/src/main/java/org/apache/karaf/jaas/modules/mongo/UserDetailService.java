@@ -31,6 +31,17 @@ import java.util.List;
  */
 public interface UserDetailService {
 
+	public MongoConfiguration getConfiguration();
+
+	/**
+	 * This method is called by the {@link MongoLoginModule} immediately after
+	 * instantiation of the {@link UserDetailService}.
+	 * 
+	 * @param configuration
+	 *            the mongo database configuration
+	 */
+	public void setConfiguration(MongoConfiguration configuration);
+
 	/**
 	 * @param username
 	 *            the user identifier
@@ -38,45 +49,14 @@ public interface UserDetailService {
 	 * @return the user info from the mongo source
 	 * @throws Exception
 	 */
-	UserInfo getUserInfo(String username) throws Exception;
+	public UserInfo getUserInfo(String username) throws Exception;
 
-	public String getDatasourceURL();
+	public List<String> getUserNames() throws Exception;
 
-	public void setDatasourceURL(String url);
+	public UserInfo addUser(UserInfo user) throws Exception;
 
-	public String getDatabaseName();
+	public UserInfo updateUser(UserInfo user) throws Exception;
 
-	public void setDatabaseName(String name);
-
-	/**
-	 * @return the name of the users collection used to fetch the user details
-	 */
-	public String getUserCollectionName();
-
-	/**
-	 * @param name
-	 *            the name of the user collection
-	 */
-	public void setUserCollectionName(String name);
-
-	/**
-	 * @return the name of the group collection used to fetch the groups a user
-	 *         belongs to
-	 */
-	public String getGroupCollectionName();
-
-	/**
-	 * @param name
-	 *            the name of the group collection
-	 */
-	public void setGroupCollectionName(String name);
-
-	/**
-	 * @return a list of additional properties that are used to retrieve user
-	 *         attributes from the database
-	 */
-	public List<String> getAdditionalProperties();
-
-	public void setAdditionalProperties(List<String> additionalProperties);
+	public void deleteUser(String username) throws Exception;
 
 }

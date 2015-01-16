@@ -19,15 +19,20 @@
  */
 package org.apache.karaf.jaas.modules.mongo.internal;
 
+import org.slf4j.Logger;
+import org.slf4j.LoggerFactory;
+
 import java.net.UnknownHostException;
 import java.util.ArrayList;
+import java.util.LinkedList;
 import java.util.List;
 import java.util.StringTokenizer;
 
-import org.apache.karaf.jaas.modules.mongo.MongoLoginModule;
+import org.apache.karaf.jaas.modules.mongo.MongoConfiguration;
 import org.apache.karaf.jaas.modules.mongo.UserDetailService;
 import org.apache.karaf.jaas.modules.mongo.UserInfo;
 
+import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
 import com.mongodb.DB;
@@ -45,6 +50,8 @@ import com.mongodb.ServerAddress;
  */
 public class DefaultUserDetailService implements UserDetailService {
 
+	protected transient Logger log = LoggerFactory.getLogger(getClass());
+
 	private static ExpiringMap<String, MongoClient> createdClients = new ExpiringMap<String, MongoClient>();
 
 	static {
@@ -56,110 +63,76 @@ public class DefaultUserDetailService implements UserDetailService {
 
 	}
 
-	private String datasourceURL;
+	private MongoConfiguration configuration;
 
-	private String databaseName;
+	private static DBObject ROLE_PROJECTION = BasicDBObjectBuilder.start()
+			.add("_id", 0).add("name", 1).add("members", 1).get();
 
-	private String userCollectionName;
-
-	private String groupCollectionName;
-
-	private List<String> additionalProperties = new ArrayList<String>();
-
-	public String getDatasourceURL() {
-		return datasourceURL;
+	public DefaultUserDetailService() {
 	}
 
-	public void setDatasourceURL(String datasourceURL) {
-		this.datasourceURL = datasourceURL;
-	}
-
-	public String getDatabaseName() {
-		return databaseName;
-	}
-
-	public void setDatabaseName(String databaseName) {
-		this.databaseName = databaseName;
+	public DefaultUserDetailService(MongoConfiguration configuration) {
+		this.configuration = configuration;
 	}
 
 	@Override
-	public String getUserCollectionName() {
-		return userCollectionName;
+	public MongoConfiguration getConfiguration() {
+		return configuration;
 	}
 
 	@Override
-	public void setUserCollectionName(String userCollectionName) {
-		this.userCollectionName = userCollectionName;
-	}
-
-	@Override
-	public String getGroupCollectionName() {
-		return this.groupCollectionName;
-	}
-
-	@Override
-	public void setGroupCollectionName(String name) {
-		this.groupCollectionName = name;
-	}
-
-	@Override
-	public List<String> getAdditionalProperties() {
-		return additionalProperties;
-	}
-
-	@Override
-	public void setAdditionalProperties(List<String> additionalProperties) {
-		this.additionalProperties.addAll(additionalProperties);
+	public void setConfiguration(MongoConfiguration configuration) {
+		this.configuration = configuration;
 	}
 
 	@Override
 	public UserInfo getUserInfo(String username) throws Exception {
 
-		UserInfo userInfo = null;
+		DB db = getDB();
 
-		// create a db connection
-		MongoClient client = getClient();
-		DB db = client.getDB(databaseName);
-
-		DBCollection users = db
-				.getCollection(MongoLoginModule.DEFAULT_USER_COLLECTION);
+		DBCollection users = db.getCollection(configuration
+				.getUserCollectionName());
 
 		// populate user
 		DBObject userQuery = new BasicDBObject("username", username);
 
-		BasicDBObjectBuilder userProjection = new BasicDBObjectBuilder()
-				.add("_id", 0).add("username", 1).add("passwordHash", 1);
+		BasicDBObjectBuilder userProjectionBuilder = BasicDBObjectBuilder
+				.start().add("_id", 0).add("username", 1)
+				.add("passwordHash", 1);
 
 		// also add all custom user fields
-		for (String prop : additionalProperties) {
-			userProjection.add(prop, 1);
+		for (String prop : configuration.getAdditionalAttributes()) {
+			userProjectionBuilder.add(prop, 1);
 		}
 
-		DBObject keys = userProjection.get();
-
-		DBObject user = users.findOne(userQuery, keys);
+		DBObject user = users.findOne(userQuery, userProjectionBuilder.get());
 		// if nothing comes back just return empty handed
 		if (user == null) {
 			return null;
 		}
 
-		userInfo = new UserInfo((String) user.get("username"),
+		UserInfo userInfo = new UserInfo().withName(
+				(String) user.get("username")).withPassword(
 				(String) user.get("passwordHash"));
 
-		for (String prop : additionalProperties) {
-			userInfo.addProperty(prop, (String) user.get(prop));
+		for (String prop : configuration.getAdditionalAttributes()) {
+
+			// only add if property is actually present in the database
+			if (user.containsField(prop)) {
+				userInfo.addProperty(prop, (String) user.get(prop));
+			}
+
 		}
 
 		// populate group
-		DBCollection groups = db
-				.getCollection(MongoLoginModule.DEFAULT_GROUP_COLLECTION);
+		DBCollection groups = db.getCollection(configuration
+				.getGroupCollectionName());
 
 		DBObject groupQuery = new BasicDBObject("members", username);
 
-		DBObject groupProjection = new BasicDBObjectBuilder().add("name", 1)
-				.add("_id", 0).get();
+		DBCursor gc = groups.find(groupQuery, BasicDBObjectBuilder.start()
+				.append("_id", 0).append("name", 1).get());
 
-		DBCursor gc = groups.find(groupQuery, groupProjection);
 		while (gc.hasNext()) {
 			DBObject group = gc.next();
 			userInfo.addGroup((String) group.get("name"));
@@ -168,6 +141,129 @@ public class DefaultUserDetailService implements UserDetailService {
 
 		return userInfo;
 
+	}
+
+	public java.util.List<String> getUserNames() throws Exception {
+
+		List<String> result = new LinkedList<String>();
+
+		DBCollection users = getDB().getCollection(
+				configuration.getUserCollectionName());
+
+		DBObject userProjection = new BasicDBObjectBuilder().add("_id", 0)
+				.add("username", 1).get();
+
+		DBCursor uc = users.find(null, userProjection);
+		while (uc.hasNext()) {
+			DBObject group = uc.next();
+			result.add((String) group.get("username"));
+		}
+		uc.close();
+
+		return result;
+	}
+
+	@Override
+	public UserInfo addUser(UserInfo user) throws Exception {
+
+		DB db = getDB();
+
+		DBCollection users = db.getCollection(configuration
+				.getUserCollectionName());
+
+		DBCollection roles = db.getCollection(configuration
+				.getGroupCollectionName());
+
+		DBObject storedUser = users.findOne(new BasicDBObject().append(
+				"username", user.getName()));
+
+		if (storedUser == null) {
+
+			users.insert(BasicDBObjectBuilder.start("username", user.getName())
+					.append("passwordHash", user.getPassword()).get());
+
+		} else {
+			// will not do anything here
+		}
+
+		for (String role : user.getGroups()) {
+
+			DBObject roleQuery = new BasicDBObject("name", role);
+
+			// roles are unique by name
+			DBObject roleData = roles.findOne(roleQuery, ROLE_PROJECTION);
+
+			if (roleData == null) {
+				// add role with user as first member
+				BasicDBList members = new BasicDBList();
+				members.add(user.getName());
+				roleData = BasicDBObjectBuilder.start().add("name", role)
+						.add("members", members).get();
+
+				roles.insert(roleData);
+
+			} else {
+
+				// add user to group if not already in the role's member list
+				Object mo = roleData.get("members");
+				if (mo == null) {
+
+					// TODO what here?
+					BasicDBObject updateObject = new BasicDBObject().append(
+							"$push",
+							new BasicDBObject("members", user.getName()));
+
+					roles.update(roleQuery, updateObject);
+
+				} else if (mo != null && mo instanceof List) {
+
+					// if user is in group already we dont need to do anything
+					List<?> existingMembers = (List<?>) mo;
+
+					if (!existingMembers.contains(user.getName())) {
+						// push this user to the members list
+						BasicDBObject updateObject = new BasicDBObject()
+								.append("$push", new BasicDBObject("members",
+										user.getName()));
+
+						roles.update(roleQuery, updateObject);
+
+					}
+
+				} else {
+					log.warn(
+							"The members collection of group [{}] is not a list but of type [{}].",
+							role, mo.getClass().getName());
+				}
+
+			}
+
+		}
+
+		return user;
+	}
+
+	@Override
+	public UserInfo updateUser(UserInfo user) throws Exception {
+		// FIXME review this
+		return addUser(user);
+	}
+
+	@Override
+	public void deleteUser(String username) throws Exception {
+
+		DBCollection users = getDB().getCollection(
+				configuration.getUserCollectionName());
+
+		DBObject userQuery = new BasicDBObject("username", username);
+		users.remove(userQuery);
+
+		// / FIXME also remove from all role definitions
+
+	}
+
+	private DB getDB() throws NumberFormatException, UnknownHostException {
+		return getClient().getDB(configuration.getDatabaseName());
 	}
 
 	/**
@@ -200,7 +296,8 @@ public class DefaultUserDetailService implements UserDetailService {
 			UnknownHostException {
 
 		List<ServerAddress> servers = new ArrayList<ServerAddress>();
-		StringTokenizer st = new StringTokenizer(datasourceURL, ",");
+		StringTokenizer st = new StringTokenizer(
+				configuration.getDatasourceURL(), ",");
 		while (st.hasMoreTokens()) {
 			String serverURL = st.nextToken();
 			if (serverURL.indexOf(':') == -1) {
@@ -216,7 +313,7 @@ public class DefaultUserDetailService implements UserDetailService {
 	}
 
 	private String calculateDBHash() {
-		return "/" + this.datasourceURL + "/"; // for future password or cert
-												// creds we need hashing too
+		return "/" + this.configuration.getDatasourceURL() + "/";
+		// TODO for future password or cert creds we need hashing too
 	}
 }

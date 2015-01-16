@@ -46,6 +46,7 @@ import org.mockito.invocation.InvocationOnMock;
 import org.mockito.stubbing.Answer;
 
 import static org.junit.Assert.*;
+
 import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
@@ -83,6 +84,7 @@ public class MongoLoginModuleTest {
 		MockitoAnnotations.initMocks(this);
 	}
 
+	@SuppressWarnings({ "unchecked", "rawtypes" })
 	@Test
 	public void testSuccessfulLogin() throws LoginException,
 			ClassNotFoundException, IOException, UnsupportedCallbackException {
@@ -120,17 +122,18 @@ public class MongoLoginModuleTest {
 
 		options.put(BundleContext.class.getName(), mockBundleContext);
 
-		options.put(MongoLoginModule.DATASOURCE, mongo.getMongoHost() + ":"
+		options.put(MongoConfiguration.DATASOURCE, mongo.getMongoHost() + ":"
 				+ mongo.getMongoPort());
 
-		options.put(MongoLoginModule.DATABASE, MongoRule.UNIT_TEST_DB);
+		options.put(MongoConfiguration.DATABASE, MongoRule.UNIT_TEST_DB);
 
-		options.put(MongoLoginModule.USER_COLLECTION,
-				MongoLoginModule.DEFAULT_USER_COLLECTION);
-		options.put(MongoLoginModule.USER_ADDITIONAL_ATTRIBUTES, "email,phone");
+		options.put(MongoConfiguration.USER_COLLECTION,
+				MongoConfiguration.DEFAULT_USER_COLLECTION);
+		options.put(MongoConfiguration.USER_ADDITIONAL_ATTRIBUTES,
+				"email,phone");
 
-		options.put(MongoLoginModule.GROUP_COLLECTION,
-				MongoLoginModule.DEFAULT_GROUP_COLLECTION);
+		options.put(MongoConfiguration.GROUP_COLLECTION,
+				MongoConfiguration.DEFAULT_GROUP_COLLECTION);
 
 		options.put("debug", "true");
 		options.put("detailed.login.exception", "true");
@@ -141,6 +144,8 @@ public class MongoLoginModuleTest {
 
 		mod.login();
 
+		assertTrue(true);
+
 	}
 
 	public void prepareTestDatabase(String testUser, char[] testPassword) {
@@ -150,9 +155,9 @@ public class MongoLoginModuleTest {
 		DB db = client.getDB(MongoRule.UNIT_TEST_DB);
 
 		DBCollection users = db
-				.getCollection(MongoLoginModule.DEFAULT_USER_COLLECTION);
+				.getCollection(MongoConfiguration.DEFAULT_USER_COLLECTION);
 		DBCollection groups = db
-				.getCollection(MongoLoginModule.DEFAULT_GROUP_COLLECTION);
+				.getCollection(MongoConfiguration.DEFAULT_GROUP_COLLECTION);
 
 		// first insert a simple user
 		users.insert(new BasicDBObjectBuilder().add("username", testUser)

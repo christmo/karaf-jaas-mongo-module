@@ -23,10 +23,7 @@ import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
 import java.io.IOException;
-import java.util.List;
-import java.util.ArrayList;
 import java.util.Map;
-import java.util.StringTokenizer;
 
 import javax.security.auth.Subject;
 import javax.security.auth.callback.Callback;
@@ -36,12 +33,9 @@ import javax.security.auth.callback.PasswordCallback;
 import javax.security.auth.callback.UnsupportedCallbackException;
 import javax.security.auth.login.LoginException;
 
-import org.osgi.framework.Bundle;
-import org.osgi.framework.BundleContext;
 import org.apache.karaf.jaas.boot.principal.GroupPrincipal;
 import org.apache.karaf.jaas.boot.principal.UserPrincipal;
 import org.apache.karaf.jaas.modules.AbstractKarafLoginModule;
-import org.apache.karaf.jaas.modules.mongo.internal.DefaultUserDetailService;
 
 /**
  * 
@@ -56,53 +50,10 @@ import org.apache.karaf.jaas.modules.mongo.internal.DefaultUserDetailService;
  */
 public class MongoLoginModule extends AbstractKarafLoginModule {
 
-	private final Logger logger = LoggerFactory
+	private final static Logger logger = LoggerFactory
 			.getLogger(MongoLoginModule.class);
 
-	/**
-	 * The mongodb database connection configuration. To configure multi host
-	 * connections such as mongo replica sets or shards just separate the server
-	 * addresses with a comma e.g. <code>loclahost:27017,localhost:27018</code>
-	 */
-	public static final String DATASOURCE = "mongo.db.url";
-
-	/**
-	 * The name of the mongo database used to connect to.
-	 */
-	public static final String DATABASE = "mongo.db.name";
-
-	/**
-	 * The name of the users collection, default is
-	 * {@link #DEFAULT_USER_COLLECTION}.
-	 */
-	public static final String USER_COLLECTION = "mongo.user.collection.name";
-
-	/**
-	 * The name of the groups collection, default is
-	 * {@link #DEFAULT_GROUP_COLLECTION}.
-	 */
-	public static final String GROUP_COLLECTION = "mongo.group.collection.name";
-
-	/**
-	 * Can be used to retrieve additional user attributes. The login module
-	 * currently only supports string values.
-	 */
-	public static final String USER_ADDITIONAL_ATTRIBUTES = "mongo.user.attributes";
-
-	public static final String DEFAULT_USER_COLLECTION = "users";
-	public static final String DEFAULT_GROUP_COLLECTION = "groups";
-
-	/**
-	 * Extended Configuration <br/>
-	 * 
-	 * Configure the implementation class to deliver user information and
-	 * construct the user principal.
-	 */
-	public static final String MONGO_SOURCE_IMPLEMENTATION_CLASS = "mongo.source.implementation.class";
-
-	private String datasourceURL;
-
-	private String dbName;
+	private MongoConfigurationBuilder configBuilder;
 
 	@Override
 	public void initialize(Subject subject, CallbackHandler callbackHandler,
@@ -110,15 +61,9 @@ public class MongoLoginModule extends AbstractKarafLoginModule {
 
 		super.initialize(subject, callbackHandler, options);
 
-		datasourceURL = (String) options.get(DATASOURCE);
-		if (datasourceURL == null || datasourceURL.trim().length() == 0) {
-			logger.error("No datasource was specified ");
-		}
-
-		dbName = (String) options.get(DATABASE);
-		if (dbName == null || dbName.trim().length() == 0) {
-			logger.error("No database name was specified ");
-		}
+		// build the database configuration from options
+		configBuilder = new MongoConfigurationBuilder(this.bundleContext,
+				options);
 
 	}
 
@@ -158,50 +103,28 @@ public class MongoLoginModule extends AbstractKarafLoginModule {
 		 * setup user detail service
 		 * 
 		 **************************************************************************/
-		UserDetailService userSource = null;
 
-		String userSourceImplementationClass = (String) options
-				.get(MONGO_SOURCE_IMPLEMENTATION_CLASS);
+		// TODO check if mongo classes are available on the classpath
 
-		if (userSourceImplementationClass != null) {
-			// TODO test this ... uh, ah lets see if we can load it from bundle
-			// context
-			BundleContext ctx = this.bundleContext;
-			Bundle bundle = ctx.getBundle();
-			try {
-				userSource = (UserDetailService) bundle.loadClass(
-						userSourceImplementationClass).newInstance();
-			} catch (ClassNotFoundException | InstantiationException
-					| IllegalAccessException e) {
-				throw new LoginException(
-						"Failed to load custom user detail service. "
-								+ e.getMessage());
-			}
-		} else {
-			// its a pale old white one
-			userSource = new DefaultUserDetailService();
+		MongoConfiguration config;
+		try {
+			config = configBuilder.build();
+		} catch (ConfigurationException e) {
+			throw new LoginException("Failed to configure login module: "
+					+ e.getMessage());
 		}
 
-		userSource.setDatasourceURL(datasourceURL);
-		userSource.setDatabaseName(dbName);
-		// TODO secure login to mongodb
-		// http://docs.mongodb.org/ecosystem/tutorial/getting-started-with-java-driver/#authentication-optional
+		UserDetailService userSource = null;
+		try {
+			userSource = config.getUserDetailServiceImplementationClass()
+					.newInstance();
+		} catch (InstantiationException | IllegalAccessException e) {
+			throw new LoginException(
+					"Failed to load custom user detail service. "
+							+ e.getMessage());
+		}
 
-		// get user collection name
-		String userColl = (String) options.get(USER_COLLECTION);
-		userSource
-				.setUserCollectionName((userColl == null ? DEFAULT_USER_COLLECTION
-						: userColl));
-
-		// get group collection name
-		String groupColl = (String) options.get(GROUP_COLLECTION);
-		userSource
-				.setGroupCollectionName((groupColl == null ? DEFAULT_GROUP_COLLECTION
-						: groupColl));
-
-		// additional attributes
-		String optAttr = (String) options.get(USER_ADDITIONAL_ATTRIBUTES);
-		userSource.setAdditionalProperties(parseCommaList(optAttr));
+		userSource.setConfiguration(config);
 
 		/**************************************************************************
 		 * 
@@ -213,6 +136,7 @@ public class MongoLoginModule extends AbstractKarafLoginModule {
 		try {
 			userInfo = userSource.getUserInfo(user);
 		} catch (Exception e) {
+			logger.error("Failed to get user from mongodb.", e);
 			throw new LoginException("Failed to retrieve user [" + user
 					+ "] from mongo database." + e.getMessage());
 		}
@@ -222,6 +146,7 @@ public class MongoLoginModule extends AbstractKarafLoginModule {
 			throw new LoginException("User [" + user + "] does not exist.");
 		}
 
+		// TODO add password encryption
 		// verify password matches
 		if (!checkPassword(providedPwd, userInfo.getPassword())) {
 			throw new LoginException("User [" + user
@@ -264,21 +189,6 @@ public class MongoLoginModule extends AbstractKarafLoginModule {
 			logger.debug("logout");
 		}
 		return true;
-	}
-
-	private List<String> parseCommaList(String commaList) {
-
-		List<String> result = new ArrayList<String>();
-
-		if (commaList != null && !"".equals(commaList)) {
-			StringTokenizer st = new StringTokenizer(commaList, ",");
-			while (st.hasMoreTokens()) {
-				result.add(st.nextToken());
-			}
-		}
-
-		return result;
-
 	}
 
 	/**

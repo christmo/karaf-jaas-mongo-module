@@ -73,8 +73,9 @@ public class EchoServiceImpl {
 		if (user == null) {
 			token.appendError("principal on security context is null");
 		} else if (!(user instanceof ExtendedUserPrincipal)) {
-			token.setError("principal on security context is not an extended type but ["
+			token.appendError("principal on security context is not an extended type but ["
 					+ user.getClass().getName() + "]");
+			token.setPrincipal(user.getName());
 		} else {
 
 			ExtendedUserPrincipal extUser = (ExtendedUserPrincipal) user;
