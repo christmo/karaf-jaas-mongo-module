@@ -27,7 +27,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.StringTokenizer;
 
-import org.osgi.framework.Bundle;
 import org.osgi.framework.BundleContext;
 
 import org.apache.karaf.jaas.modules.mongo.internal.DefaultUserDetailService;

@@ -51,6 +51,7 @@ import org.junit.Before;
 import org.junit.Rule;
 import org.junit.Test;
 
+import org.bson.types.ObjectId;
 import com.mongodb.BasicDBList;
 import com.mongodb.BasicDBObject;
 import com.mongodb.BasicDBObjectBuilder;
@@ -130,7 +131,7 @@ public class MongoLoginModuleTest {
 		options.put(MongoConfiguration.USER_COLLECTION,
 				MongoConfiguration.DEFAULT_USER_COLLECTION);
 		options.put(MongoConfiguration.USER_ADDITIONAL_ATTRIBUTES,
-				"email,phone");
+				"email,phone,partitionId");
 
 		options.put(MongoConfiguration.GROUP_COLLECTION,
 				MongoConfiguration.DEFAULT_GROUP_COLLECTION);
@@ -162,7 +163,8 @@ public class MongoLoginModuleTest {
 		// first insert a simple user
 		users.insert(new BasicDBObjectBuilder().add("username", testUser)
 				.add("email", testUser + "@zz.zz").add("phone", "0733446767")
-				.add("passwordHash", new String(testPassword)).get());
+				.add("passwordHash", new String(testPassword))
+				.add("partitionId", ObjectId.get()).get());
 
 		users.insert(new BasicDBObjectBuilder().add("username", "fred")
 				.add("email", "fred@zz.zz").add("phone", "0822416957")

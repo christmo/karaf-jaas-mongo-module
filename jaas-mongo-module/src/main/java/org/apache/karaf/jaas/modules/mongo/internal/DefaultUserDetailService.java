@@ -119,7 +119,8 @@ public class DefaultUserDetailService implements UserDetailService {
 
 			// only add if property is actually present in the database
 			if (user.containsField(prop)) {
-				userInfo.addProperty(prop, (String) user.get(prop));
+				Object val = user.get(prop);
+				userInfo.addProperty(prop, val != null ? val.toString() : "");
 			}
 
 		}
