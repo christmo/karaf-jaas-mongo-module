@@ -11,10 +11,6 @@
 	<name>Apache Karaf :: JAAS :: Mongo REST Example</name>
 	<description>mongo-auth-test OSGi blueprint bundle project.</description>
 
-	<properties>
-		<cxf.version>2.7.14</cxf.version>
-	</properties>
-
 	<dependencies>
 		<!-- TODO remove debug only -->
 		<dependency>
@@ -32,11 +28,6 @@
 		</dependency>
 
 		<!-- CXF -->
-		<dependency>
-			<groupId>org.apache.cxf</groupId>
-			<artifactId>cxf-rt-core</artifactId>
-			<version>${cxf.version}</version>
-		</dependency>
 		<dependency>
 			<groupId>org.apache.cxf</groupId>
 			<artifactId>cxf-rt-frontend-jaxrs</artifactId>

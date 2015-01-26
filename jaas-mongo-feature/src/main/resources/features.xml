@@ -2,7 +2,7 @@
 <features name="jaas-mongo-module-${project.version}">
 
 	<repository>
-		mvn:org.apache.cxf.karaf/apache-cxf/2.7.14/xml/features
+		mvn:org.apache.cxf.karaf/apache-cxf/${cxf.version}/xml/features
 	</repository>
 
 	<!-- workaround https://issues.apache.org/jira/browse/KARAF-2660 -->
